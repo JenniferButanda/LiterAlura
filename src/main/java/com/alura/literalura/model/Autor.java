@@ -3,6 +3,7 @@ package com.alura.literalura.model;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -15,8 +16,14 @@ public class Autor {
     private String nombre;
     private Integer anioNacimiento;
     private Integer anioMuerte;
-    @ManyToOne
-    private Libro libro;
+//    @ManyToMany(cascade = CascadeType.PERSIST)
+//    @JoinTable(name = "libro_autor",
+//            joinColumns = @JoinColumn(name = "autor_id"),
+//            inverseJoinColumns = @JoinColumn(name = "libro_id"))
+//    private List<Libro> libros = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "autores", cascade = CascadeType.PERSIST)
+    private List<Libro> libros = new ArrayList<>();
 
     public Autor(){}
 
@@ -30,7 +37,7 @@ public class Autor {
         return "autor: " + nombre + '\'' +
                 "año de nacimiento: " + anioMuerte + '\'' +
                 "año de muerte: " + anioMuerte + '\'' +
-                "libros: " + libro + '\'';
+                "libros: " + libros + '\'';
     }
 
     public String getNombre() {
@@ -57,11 +64,11 @@ public class Autor {
         this.anioMuerte = anioMuerte;
     }
 
-    public Libro getLibro() {
-        return libro;
+    public List<Libro> getLibros() {
+        return libros;
     }
 
-    public void setLibro(Libro libro) {
-        this.libro = libro;
+    public void setLibros(List<Libro> libros) {
+        this.libros = libros;
     }
 }

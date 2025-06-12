@@ -6,46 +6,38 @@ import com.alura.literalura.model.DatosLibro;
 import com.alura.literalura.model.Libro;
 import com.alura.literalura.repository.AutorRepository;
 import com.alura.literalura.repository.LibroRepository;
-import com.alura.literalura.service.AutorService;
 import com.alura.literalura.service.ConsumoAPI;
 import com.alura.literalura.service.ConvierteDatos;
-import com.alura.literalura.service.LibroService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
-@Component
 public class Principal {
     private Scanner teclado = new Scanner(System.in);
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     private ConvierteDatos conversor = new ConvierteDatos();
-    private final String URL_BASE = "https://gutendex.com/books/?search=";
+    private final String URL_BASE = "https://gutendex.com/books";
+    private List<DatosLibro> datosLibros = new ArrayList<>();
+    private LibroRepository libroRepository;
+    private List<Libro> libros;
+    private List<DatosAutor> datosAutores = new ArrayList<>();
+    private AutorRepository autorRepository;
+    private List<Autor> autores;
 
-    private final LibroService libroService;
-    private final AutorService autorService;
-
-    @Autowired
-    public Principal(AutorService autorService) {
-        this.autorService = autorService;
-    }
-
-    private LibroRepository repositorio;
-    private LibroService libroService;
-
-    public Principal(LibroRepository repositorio) {
-        this.repositorio = repositorio;
-        this.libroService = new LibroService(repositorio);
+    public Principal(LibroRepository libroRepository, AutorRepository autorRepository) {
+        this.libroRepository = libroRepository;
+        this.autorRepository = autorRepository;
     }
 
     public void muestraElMenu() {
         int opcion = -1;
         while (opcion != 0) {
-            var menu = ("""
-                    
-                    === BIBLIOTECA DIGITAL ===
+            var menu = """
+                    *** BIBLIOTECA DIGITAL ***
                     1 - Buscar libro por título
                     2 - Listar libros registrados
                     3 - Listar autores registrados
@@ -53,8 +45,7 @@ public class Principal {
                     5 - Listar libros por idioma
                     
                     0 - Salir
-                    """);
-
+                    """;
             System.out.println(menu);
             opcion = teclado.nextInt();
             teclado.nextLine();
@@ -84,55 +75,69 @@ public class Principal {
         }
     }
 
+    private DatosLibro getDatosLibro() {
+        System.out.println("Escribe el nombre del libro que deseas buscar");
+        var nombreLibro = teclado.nextLine();
+        var json = consumoAPI.obtenerDatos(URL_BASE + "?search=" + URLEncoder.encode(nombreLibro, StandardCharsets.UTF_8));
+        System.out.println(json);
+        DatosLibro datos = conversor.obtenerDatos(json, DatosLibro.class);
+        return datos;
+    }
+
     private void buscarLibroPorTitulo() {
-        System.out.print("Escribe el título del libro que deseas buscar: ");
-        String titulo = teclado.nextLine();
-
-        String json = consumoAPI.obtenerDatos(URL_BASE + titulo.replace(" ", "+"));
-        DatosLibro resultado = conversor.obtenerDatos(json, DatosLibro.class);
-
-        if (resultado != null && !resultado.resultados().isEmpty()) {
-            DatosLibro datosLibro = resultado.resultados().get(0);  // Solo el primero
-            Libro libro = new Libro(datosLibro);
-            libroService.guardarLibro(libro);
-            System.out.println("Libro guardado: \n" + libro);
-        } else {
-            System.out.println("No se encontró ningún libro con ese título.");
+        DatosLibro datos = getDatosLibro();
+        if (datos != null) {
+            System.out.println("Libro no encontrado");
+            return;
         }
+
+        //verificando si el libro ya existe en la base de datos:
+        Optional<Libro> libroExistente = libroRepository.findByTituloContainsIgnoreCase(datos.titulo());
+        if(libroExistente.isPresent()) {
+            System.out.println("El libro ya está registrado: " + libroExistente.get());
+            return;
+        }
+
+        //Guardar libro y autores:
+        Libro libro = new Libro(datos);
+        datos.autores().forEach(datosAutor -> {
+            Autor autor = new Autor(datosAutor);
+            autorRepository.save(autor);
+            libro.addAutor(autor);
+        });
+        libroRepository.save(libro);
+
+        //Mostrar datos:
+        System.out.println("Título: " + datos.titulo());
+        System.out.println("Autor: " + datos.autores().get(0).nombre());
+        System.out.println("Idioma: " + datos.idiomas().get(0));
+        System.out.println("Descargas: " + datos.numeroDeDescargas());
     }
 
     private void listarLibrosRegistrados() {
-        List<Libro> libros = libroService.listarLibros();
-        libros.forEach(System.out::println);
+        libros = libroRepository.findAll();
+        if (libros.isEmpty()) {
+            System.out.println("No hay libros registrados.");
+            return;
+        }
+        libros.forEach(libro -> {
+            System.out.println("Título: " + libro.getTitulo());
+            System.out.println("Autor: " + libro.getAutores().get(0).getNombre());
+            System.out.println("Idioma: " + libro.getIdioma());
+            System.out.println("Descargas: " + libro.getNumeroDeDescargas());
+            System.out.println("-----");
+        });
     }
 
     private void listarAutoresRegistrados() {
-        List<Autor> autores = libroService.listarAutores();
-        autores.forEach(System.out::println);
+        System.out.println("Función en desarrollo");
     }
 
     private void listarAutoresVivosEnAnio() {
-        System.out.print("Introduce el año para buscar autores vivos en ese periodo: ");
-        int anio = teclado.nextInt();
-        teclado.nextLine();
-
-        List<Autor> autoresVivos = libroService.autoresVivosEn(anio);
-        if (autoresVivos.isEmpty()) {
-            System.out.println("No se encontraron autores vivos en ese año.");
-        } else {
-            autoresVivos.forEach(System.out::println);
-        }
+        System.out.println("Función en desarrollo");
     }
 
     private void listarLibrosPorIdioma() {
-        System.out.print("Introduce el código de idioma (por ejemplo: 'en' para inglés, 'es' para español): ");
-        String idioma = teclado.nextLine();
-
-        List<Libro> librosPorIdioma = libroService.librosPorIdioma(idioma);
-        if (librosPorIdioma.isEmpty()) {
-            System.out.println("No hay libros en ese idioma.");
-        } else {
-            librosPorIdioma.forEach(System.out::println);
-        }
+        System.out.println("Función en desarrollo");
     }
 }
