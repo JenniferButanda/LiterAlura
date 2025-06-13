@@ -16,10 +16,14 @@ public class ConsumoAPI {
         try {
             HttpResponse<String> response = client
                     .send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                System.out.println("Error en la petición: Código " + response.statusCode());
+                return null;
+            }
             return response.body();
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace(); //borrar luego
-            throw new RuntimeException("Error al obtener datos de la API", e);
+            e.printStackTrace(); //temporal mientras desarrollo
+            return null;
         }
     }
 }

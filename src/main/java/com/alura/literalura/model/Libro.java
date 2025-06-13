@@ -16,7 +16,7 @@ public class Libro {
     private String titulo;
 //    @ManyToMany(mappedBy = "libros", cascade = CascadeType.PERSIST)
 //    private List<Autor> autores = new ArrayList<>();
-    private List<String> idioma;
+    private String idioma;
     private Integer numeroDeDescargas;
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
@@ -31,7 +31,9 @@ public class Libro {
 
     public Libro(DatosLibro datosLibro) {
         this.titulo = datosLibro.titulo();
-        this.idioma = datosLibro.idiomas();
+        this.idioma = datosLibro.idiomas() != null
+                ? String.join(", ", datosLibro.idiomas())
+                : "Idioma no disponible";
         this.numeroDeDescargas = datosLibro.numeroDeDescargas();
 
         this.autores = datosLibro.autores().stream()
@@ -66,11 +68,11 @@ public class Libro {
     public void setAutores(List<Autor> autores) {
     }
 
-    public List<String> getIdioma() {
+    public String getIdioma() {
         return idioma;
     }
 
-    public void setIdioma(List<String> idioma) {
+    public void setIdioma(String idioma) {
         this.idioma = idioma;
     }
 

@@ -79,14 +79,19 @@ public class Principal {
         System.out.println("Escribe el nombre del libro que deseas buscar");
         var nombreLibro = teclado.nextLine();
         var json = consumoAPI.obtenerDatos(URL_BASE + "?search=" + URLEncoder.encode(nombreLibro, StandardCharsets.UTF_8));
-        System.out.println(json);
+        //var json = consumoAPI.obtenerDatos("https://gutendex.com/books/?search=gatsby"); //para prueba de la API
+        if (json == null || json.isBlank()) {
+            System.out.println("No se pudo obtener información del libro.");
+            return null;
+        }
+        System.out.println("Respuesta de la API: " + json); //temporal mientras hago debugging
         DatosLibro datos = conversor.obtenerDatos(json, DatosLibro.class);
         return datos;
     }
 
     private void buscarLibroPorTitulo() {
         DatosLibro datos = getDatosLibro();
-        if (datos != null) {
+        if (datos == null) {
             System.out.println("Libro no encontrado");
             return;
         }
