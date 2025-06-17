@@ -72,59 +72,28 @@ public class Principal {
         }
     }
 
-    //Esto no jala bien
-//    private DatosLibro getDatosLibro() {
-//        System.out.println("Escribe el nombre del libro que deseas buscar");
-//        var nombreLibro = teclado.nextLine();
-//        var json = consumoAPI.obtenerDatos(URL_BASE + "?search=" + URLEncoder.encode(nombreLibro, StandardCharsets.UTF_8));
-//        //var json = consumoAPI.obtenerDatos("https://gutendex.com/books/?search=gatsby"); //para prueba de la API
-//        if (json == null || json.isBlank()) {
-//            System.out.println("No se pudo obtener información del libro.");
-//            return null;
-//        }
-//        System.out.println("Respuesta de la API: " + json); //temporal mientras hago debugging
-//        DatosLibro datos = conversor.obtenerDatos(json, DatosLibro.class);
-//        return datos;
-//    }
-//
-//    private void buscarLibroPorTitulo() {
-//        DatosLibro datos = getDatosLibro();
-//        if (datos == null) {
-//            System.out.println("Libro no encontrado");
-//            return;
-//        }
-//
-//        //verificando si el libro ya existe en la base de datos:
-//        Optional<Libro> libroExistente = libroRepository.findByTituloContainsIgnoreCase(datos.titulo());
-//        if(libroExistente.isPresent()) {
-//            System.out.println("El libro ya está registrado: " + libroExistente.get());
-//            return;
-//        }
-//
-//        //Guardar libro y autores:
-//        Libro libro = new Libro(datos);
-//        datos.autores().forEach(datosAutor -> {
-//            Autor autor = new Autor(datosAutor);
-//            autorRepository.save(autor);
-//            libro.addAutor(autor);
-//        });
-//        libroRepository.save(libro);
-//
-//        //Mostrar datos:
-//        System.out.println("Título: " + datos.titulo());
-//        System.out.println("Autor: " + datos.autores().get(0).nombre());
-//        System.out.println("Idioma: " + datos.idiomas().get(0));
-//        System.out.println("Descargas: " + datos.numeroDeDescargas());
-//    }
-
-    //---------------------------------------------------------------------------------------------
-
-    //El siguiente metodo ya realiza una búsqueda de libros en la API, pero falta almacenar los datos en la base de datos
+    private void imprimirLibro(Libro libro) {
+        System.out.println("Título: " + libro.getTitulo());
+        System.out.println("Autor: " + libro.getAutores().get(0).getNombre());
+        System.out.println("Idioma: " + libro.getIdioma());
+        System.out.println("Descargas: " + libro.getNumeroDeDescargas());
+    }
 
     private void buscarLibroPorTitulo() {
         System.out.println("Escribe el nombre del libro que deseas buscar:");
         String nombreBuscado = teclado.nextLine();
 
+        //Buscar en la base de datos primero
+        Optional<Libro> libroEnBD = libroRepository.findByTituloContainsIgnoreCaseFetchAutores(nombreBuscado);
+
+        if(libroEnBD.isPresent()) {
+            System.out.println("\n--------------------------------------\n");
+            imprimirLibro(libroEnBD.get());
+            System.out.println("\n--------------------------------------\n");
+            return;
+        }
+
+        //Si no está en la base de datos, buscar en la API
         String url = URL_BASE + "/?search=" + URLEncoder.encode(nombreBuscado, StandardCharsets.UTF_8);
         String json = consumoAPI.obtenerDatos(url);
 
@@ -135,11 +104,18 @@ public class Principal {
             return;
         }
 
+        //Tomar el primer resultado de la API
         DatosLibro datosLibro = resultado.results().get(0);
-        System.out.println("Título: " + datosLibro.titulo());
-        System.out.println("Autor: " + datosLibro.autores().get(0).nombre());
-        System.out.println("Idioma: " + datosLibro.idiomas().get(0));
-        System.out.println("Descargas: " + datosLibro.numeroDeDescargas());
+
+        //Convertir DatosLibro - Libro
+        Libro nuevoLibro = new Libro(datosLibro);
+
+        //Guardar en la base de datos
+        libroRepository.save(nuevoLibro);
+
+        //Mostrar la información
+        System.out.println("Libro encontrado en la API y guardado en la base de datos");
+        imprimirLibro(nuevoLibro);
     }
 
     private void listarLibrosRegistrados() {
