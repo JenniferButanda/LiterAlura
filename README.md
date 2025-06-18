@@ -86,7 +86,7 @@ El proyecto está dividido en los siguientes paquetes:
 0 - Salir
 
 
-![Demostración del programa](assets/demoCM.gif)
+![Demostración del programa](Demo_Literalura.gif)
 
 ---
 
