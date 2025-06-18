@@ -84,8 +84,7 @@ El proyecto está dividido en los siguientes paquetes:
 4. Listar autores vivos en un determinado año
 5. Listar libros por idioma
 
-0. Salir
-
+   0. Salir
 
 ![Demostración del programa](Demo_Literalura.gif)
 
