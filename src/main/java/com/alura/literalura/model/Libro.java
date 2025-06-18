@@ -14,8 +14,6 @@ public class Libro {
     private Long Id;
     @Column(unique = true)
     private String titulo;
-//    @ManyToMany(mappedBy = "libros", cascade = CascadeType.PERSIST)
-//    private List<Autor> autores = new ArrayList<>();
     private String idioma;
     private Integer numeroDeDescargas;
     @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)

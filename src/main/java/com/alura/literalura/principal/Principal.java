@@ -70,6 +70,7 @@ public class Principal {
                     break;
                 default:
                     System.out.println("Opción inválida");
+                    return;
             }
         }
     }
@@ -117,6 +118,7 @@ public class Principal {
 
         //Mostrar la información
         System.out.println("Libro encontrado en la API y guardado en la base de datos");
+        System.out.println("----------------------------------------");
         imprimirLibro(nuevoLibro);
     }
 
@@ -126,7 +128,7 @@ public class Principal {
             System.out.println("No hay libros registrados.");
             return;
         }
-        System.out.println("\n--- Libros registrados --\n");
+        System.out.println("\n--- LIBROS REGISTRADOS --\n");
         for (Libro libro : libros) {
             System.out.println("Título: " + libro.getTitulo());
             // Mostrar todos los autores separados por coma
