@@ -18,7 +18,7 @@ public class Libro {
 //    private List<Autor> autores = new ArrayList<>();
     private String idioma;
     private Integer numeroDeDescargas;
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @JoinTable(
             name = "libro_autor",
             joinColumns = @JoinColumn(name = "libro_id"),

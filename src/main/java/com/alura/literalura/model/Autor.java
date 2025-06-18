@@ -22,7 +22,7 @@ public class Autor {
 //            inverseJoinColumns = @JoinColumn(name = "libro_id"))
 //    private List<Libro> libros = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "autores", cascade = CascadeType.PERSIST)
+    @ManyToMany(mappedBy = "autores", cascade = CascadeType.PERSIST/*, fetch = FetchType.EAGER*/)
     private List<Libro> libros = new ArrayList<>();
 
     public Autor(){}
